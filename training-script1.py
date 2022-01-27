@@ -34,7 +34,7 @@ class ViTForImageClassification2(nn.Module):
             attentions=outputs.attentions,
         )
 
-train_ds, test_ds = load_dataset('cifar10', split=['train[:500]', 'test[:100]']) 
+train_ds, test_ds = load_dataset('cifar10', split=['train[:1000]', 'test[:200]']) 
 splits = train_ds.train_test_split(test_size=0.1)
 train_ds = splits['train']
 val_ds = splits['test']
