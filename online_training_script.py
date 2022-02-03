@@ -1,3 +1,4 @@
+# %%
 from transformers import ViTModel, ViTConfig, ViTForImageClassification, ViTFeatureExtractor, Trainer, TrainingArguments
 import torch
 from datasets import load_dataset, load_metric, Features, ClassLabel, Array3D
@@ -8,14 +9,12 @@ import torch.nn as nn
 from transformers.modeling_outputs import SequenceClassifierOutput
 
 class ViTForImageClassification2(nn.Module):
-
     def __init__(self, num_labels=10):
 
         super(ViTForImageClassification2, self).__init__()
         self.vit = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k')
         self.classifier = nn.Linear(self.vit.config.hidden_size, num_labels)
         self.num_labels = num_labels
-
     def forward(self, pixel_values, labels):
 
         outputs = self.vit(pixel_values=pixel_values)
@@ -34,7 +33,8 @@ class ViTForImageClassification2(nn.Module):
             attentions=outputs.attentions,
         )
 
-train_ds, test_ds = load_dataset('cifar10', split=['train[:1000]', 'test[:200]']) 
+train_ds, test_ds = load_dataset('cifar10', split=['train[:500]', 'test[:100]']) 
+
 splits = train_ds.train_test_split(test_size=0.1)
 train_ds = splits['train']
 val_ds = splits['test']
@@ -65,6 +65,8 @@ preprocessed_val_ds = val_ds.map(preprocess_images, batched=True, features=featu
 preprocessed_test_ds = test_ds.map(preprocess_images, batched=True, features=features)
 
 # print(f" type is : {type(preprocessed_train_ds)} , print : {preprocessed_train_ds})")
+
+# %%
 
 model.train()
 
