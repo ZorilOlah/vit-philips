@@ -35,11 +35,15 @@ class ViTForImageClassification2(nn.Module):
 
 train_ds, test_ds = load_dataset('cifar10', split=['train[:500]', 'test[:100]']) 
 
+# %%
+
 splits = train_ds.train_test_split(test_size=0.1)
 train_ds = splits['train']
 val_ds = splits['test']
 metric = load_metric("accuracy")
 data_collator = default_data_collator
+
+# %%
 
 model = ViTForImageClassification2()
 feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224-in21k')

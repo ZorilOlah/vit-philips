@@ -133,3 +133,5 @@ dmypy.json
 
 # Folders
 image-files/
+huggingface_log/
+huggingface_results/

@@ -21,11 +21,13 @@ import os
 from io import BytesIO  
 import pandas as pd
 from preprocessing.utils import available_images, split_dataset
+from ray import tune
+
 
 path = Path(__file__).parent
 
-# image_folder = str(path) + '/data/image-files'
-image_folder = str(path) + '/data/image_folder/'
+image_folder = str(path) + '/data/image-files'
+# image_folder = str(path) + '/data/image_folder/'
 excelsheet = str(path) + '/data/total_shaver_database.xlsx'
 
 names_list, labels_list = available_images(excel_file_path = excelsheet, image_folder = image_folder, resize = 600)
@@ -76,41 +78,36 @@ model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
 metric = load_metric("accuracy")
 data_collator = default_data_collator
 
-model.train()
+def model_init():
+    return ViTForImageClassification.from_pretrained('google/vit-base-patch16-224', return_dict = True)
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
     return metric.compute(predictions=predictions, references=labels)
 
-args = TrainingArguments(
+
+training_args = TrainingArguments(
     evaluation_strategy = "epoch",
     save_strategy="epoch",
-    learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
-    num_train_epochs=2,
-    weight_decay=0.01,
-    load_best_model_at_end=False,
     metric_for_best_model='accuracy',
     logging_dir= str(path) + '/logs',
     logging_strategy="epoch",
     remove_unused_columns=True,
     output_dir = str(path) + '/results'
 )
-
+    
 trainer = Trainer(
-    model,
-    args,
-    train_dataset = preprocessed_train_ds,
-    eval_dataset = preprocessed_val_ds,
-    data_collator = data_collator,
-    compute_metrics = compute_metrics,
+    model_init = model_init,
+    args=training_args,
+    train_dataset=preprocessed_train_ds,
+    eval_dataset=preprocessed_val_ds,
+    compute_metrics=compute_metrics,
 )
 
-trainer.train()
+trainer.hyperparameter_search(
+    direction="maximize", 
+    backend="ray", 
+)
 
-trainer.state.log_history
-
-print(trainer.state.log_history)
 # %%

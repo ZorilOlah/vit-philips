@@ -21,7 +21,7 @@ import os
 from io import BytesIO  
 import pandas as pd
 
-def available_images(excel_file_path, image_folder):
+def available_images(excel_file_path : str, image_folder : str, resize : int):
     "checks which of the images in de total_shaver_database are actually accesible on device" 
     data = pd.read_excel(excel_file_path) 
     new_names, new_labels = [], []
@@ -34,10 +34,10 @@ def available_images(excel_file_path, image_folder):
         try:
             if os.path.isfile(image_folder + name):
                 image = Image.open(image_folder+name)
-                image = image.resize((600,600), Image.ANTIALIAS)
+                image = image.resize((resize,resize), Image.ANTIALIAS)
                 image = np.array(image, dtype=np.uint8)
                 image = np.moveaxis(image, source=-1, destination=0)
-                if image.shape == (3, 600, 600):
+                if image.shape == (3, resize, resize):
                     new_names.append(image_folder + name)
                     new_labels.append(label)
                 else:
@@ -56,4 +56,23 @@ def split_dataset(dataset, ratio):
     test_ds = splits['test'] 
     return train_ds, test_ds
 
+def path_to_image(image_path, resize = 600):
+    image = Image.open(image_path)
+    image = image.resize((resize,resize), Image.ANTIALIAS)
+    return image
+
+def preprocess_images(examples, feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224-in21k')):
+    paths = examples['img']
+    images = [path_to_image(image_path = path) for path in paths]
+    # print(images)
+    # print(type(images))
+    images = [np.array(image, dtype=np.uint8) for image in images]
+    images = [np.moveaxis(image, source=-1, destination=0) for image in images]
+    # for image in images:
+    #     print(image.shape)
+    # print(images[0])
+    # print(images[0].shape)
+    inputs = feature_extractor(images=images)
+    examples['pixel_values'] = inputs['pixel_values']
+    return examples
 
