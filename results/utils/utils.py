@@ -24,7 +24,7 @@ def merge_dicts(*dicts : dict):
 
 def get_results_dataframe_if_exists(path : str):
     if Path(path).is_file():
-        df = pd.read_csv(path)
+        df = pd.read_csv(path, index_col=0)
     else:
         df = pd.DataFrame()
     return df
