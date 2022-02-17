@@ -1,3 +1,9 @@
-,id,learning_rate,batch_size,weight_decay,epochs,best_epoch,best_acc
-0,7Z3bERUr7qJMZSfm8Twx5J,2e-05,4.0,0.01,2.0,1.0,0.6
-1,LvotLcmfXH5HqqoFiwm7ej,2e-05,8.0,0.01,2.0,1.0,0.8
+,Unnamed: 0,Unnamed: 0.1,Unnamed: 0.1.1,Unnamed: 0.1.1.1,Unnamed: 0.1.1.1.1,Unnamed: 0.1.1.1.1.1,id,learning_rate,batch_size,weight_decay,epochs,best_epoch,best_acc
+0,0.0,0.0,0.0,0.0,0.0,0.0,7Z3bERUr7qJMZSfm8Twx5J,2e-05,4.0,0.01,2.0,1.0,0.6
+1,1.0,1.0,1.0,1.0,1.0,1.0,LvotLcmfXH5HqqoFiwm7ej,2e-05,8.0,0.01,2.0,1.0,0.8
+2,2.0,2.0,2.0,2.0,2.0,,7iHFrN52KYgFRit3Vvicru,2e-05,4.0,0.01,2.0,1.0,0.4
+3,3.0,3.0,3.0,3.0,,,EQxqhqYWD9jwWUsWLHnf79,2e-05,8.0,0.01,2.0,1.0,0.8
+4,4.0,4.0,4.0,,,,ignQu6TL6ryHaYLR4SgcNg,2e-05,4.0,0.01,2.0,2.0,0.4
+5,5.0,5.0,,,,,LTSp3VU6FnkPMcshzjcLvx,2e-05,8.0,0.01,2.0,2.0,0.6
+6,6.0,,,,,,Vr6Nng2S86s9TnVuYNzvC4,2e-05,4.0,0.01,2.0,2.0,0.8
+7,,,,,,,dksEEDmE9dxUDPWpQ8eSqD,2e-05,8.0,0.01,2.0,1.0,0.8

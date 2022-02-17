@@ -17,8 +17,10 @@ def load_pickle(name_location):
     return db
 
 def merge_dicts(*dicts : dict):
-    summary_results = [dict | dict for dict in dicts]
-    return summary_results
+    new_dict = {}
+    for dict in dicts:
+        new_dict.update(dict)
+    return new_dict
 
 def get_results_dataframe_if_exists(path : str):
     if Path(path).is_file():

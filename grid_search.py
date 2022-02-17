@@ -48,7 +48,7 @@ model.train()
 
 search_space = {
     "learning_rate" : [2e-5],
-    "batch_size" : [4],
+    "batch_size" : [4, 8],
     "weight_decay" : [0.01],
     "epochs" : [2],
 }
@@ -68,9 +68,9 @@ for configuration, args in training_args_list:
         compute_metrics = compute_metrics,
     )
     trainer.train()
-    summary_results = {"id" : identifier} | configuration |best_results_from_log(trainer.state.log_history)
+    summary_results = merge_dicts({"id" : identifier}, configuration ,best_results_from_log(trainer.state.log_history))
     print(summary_results)
-    all_results = summary_results | {"all_results" : trainer.state.log_history , "model" : model}
+    all_results = merge_dicts(summary_results, {"all_results" : trainer.state.log_history , "model" : model})
     df = df.append(summary_results, ignore_index=True)
     to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
     df.to_csv(path_or_buf = str(path) + '/results/grid_search_results.csv')
