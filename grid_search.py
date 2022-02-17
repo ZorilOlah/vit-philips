@@ -15,8 +15,8 @@ from results.utils.utils import to_pickle, load_pickle, merge_dicts, best_result
 
 path = Path(__file__).parent
 
-# image_folder = str(path) + '/data/image-files'
-image_folder = str(path) + '/data/image_folder/'
+image_folder = str(path) + '/data/image-files/'
+# image_folder = str(path) + '/data/image_folder/'
 excelsheet = str(path) + '/data/total_shaver_database.xlsx'
 
 names_list, labels_list = available_images(excel_file_path = excelsheet, image_folder = image_folder, resize = 600)
