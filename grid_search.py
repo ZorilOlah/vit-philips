@@ -57,6 +57,7 @@ hyperparamters_list = hyperparamters_from_dict(search_space)
 training_args_list = parameters_to_trainingarguments(hyperparamters_list, path = path)
 
 for configuration, args in training_args_list:
+    model = ViTForImageClassification2()
     df = get_results_dataframe_if_exists(str(path) + '/results/grid_search_results.csv')
     identifier = shortuuid.uuid()
 
