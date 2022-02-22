@@ -47,10 +47,10 @@ data_collator = default_data_collator
 model.train()
 
 search_space = {
-    "learning_rate" : [2e-5],
-    "batch_size" : [4, 8],
-    "weight_decay" : [0.01],
-    "epochs" : [2],
+    "learning_rate" : [2e-5, 2e-6, 2e-7, 2e-8],
+    "batch_size" : [4, 8, 16, 32],
+    "weight_decay" : [0.001, 0.01, 0.05, 0.1, 0.8],
+    "epochs" : [10],
 }
 
 hyperparamters_list = hyperparamters_from_dict(search_space)

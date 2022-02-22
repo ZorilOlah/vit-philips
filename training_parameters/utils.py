@@ -22,7 +22,7 @@ def compute_metrics(eval_pred):
 def make_training_object(learning_rate : float, batch_size : int, weight_decay : float, epochs : int, path : Path):
         training_args = TrainingArguments(
             evaluation_strategy = "epoch",
-            save_strategy="epoch",
+            save_strategy="no",
             learning_rate=learning_rate,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size,
@@ -31,7 +31,7 @@ def make_training_object(learning_rate : float, batch_size : int, weight_decay :
             load_best_model_at_end=False,
             metric_for_best_model='accuracy',
             logging_dir= str(path) + '/logs/huggingface_logs',
-            logging_strategy="epoch",
+            logging_strategy="no",
             remove_unused_columns=True,
             output_dir = str(path) + '/results/huggingface_results'
         )
