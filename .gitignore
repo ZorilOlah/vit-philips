@@ -136,3 +136,5 @@ image-files/
 huggingface_logs/
 huggingface_results/
 log/
+image-folder/
+total_shaver_database_cropped_subimages/

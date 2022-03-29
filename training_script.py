@@ -1,30 +1,21 @@
 # %%
-from csv import excel
-from typing import Any
 from pathlib import Path
-import torch
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
-import torchvision.models as models
-import torch.nn as nn
-import torch.optim as optim
+from tensorboard import summary
 from transformers import ViTModel, ViTConfig, ViTForImageClassification, ViTFeatureExtractor, Trainer, TrainingArguments
 from datasets import load_dataset, load_metric, Features, ClassLabel, Array3D, Value
 from transformers import default_data_collator
-import numpy as np
-from PIL import Image
-import numpy as np
 from pathlib import Path
-from transformers.modeling_outputs import SequenceClassifierOutput
 from ViT2 import ViTForImageClassification2
-import os
-from io import BytesIO  
 import pandas as pd
-from preprocessing.utils import available_images, split_dataset
+from preprocessing.utils import available_images, split_dataset, preprocess_images, path_to_image
+from training_parameters.utils import hyperparamters_from_dict, compute_metrics, parameters_to_trainingarguments
+from typing import List, Set, Dict, Tuple, Optional
+import shortuuid
+from results.utils.utils import to_pickle, load_pickle, merge_dicts, best_results_from_log, get_results_dataframe_if_exists
 
 path = Path(__file__).parent
 
-# image_folder = str(path) + '/data/image-files'
+# image_folder = str(path) + '/data/image-files/'
 image_folder = str(path) + '/data/image_folder/'
 excelsheet = str(path) + '/data/total_shaver_database.xlsx'
 
@@ -38,79 +29,53 @@ dataset = load_dataset('csv', data_files=str(path) + '/data/available_dataset.cs
 train_val, test = split_dataset(dataset = dataset, ratio = 0.1)
 train, val = split_dataset(dataset = train_val, ratio = 0.2)
 
-
-feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224-in21k')
-
 features = Features({
     'label': ClassLabel(names=unique_labels),
     'img': Value(dtype = "string", id = None),
     'pixel_values': Array3D(dtype="float32", shape=(3, 224, 224)),
 })
-def path_to_image(image_path):
-    image = Image.open(image_path)
-    image = image.resize((600,600), Image.ANTIALIAS)
-    return image
-
-def preprocess_images(examples):
-    paths = examples['img']
-    images = [path_to_image(image_path = path) for path in paths]
-    # print(images)
-    # print(type(images))
-    images = [np.array(image, dtype=np.uint8) for image in images]
-    images = [np.moveaxis(image, source=-1, destination=0) for image in images]
-    # for image in images:
-    #     print(image.shape)
-    # print(images[0])
-    # print(images[0].shape)
-    inputs = feature_extractor(images=images)
-    examples['pixel_values'] = inputs['pixel_values']
-    return examples
 
 preprocessed_train_ds = train.map(preprocess_images, batched=True, features=features)
 preprocessed_val_ds = val.map(preprocess_images, batched=True, features=features)
 preprocessed_test_ds = test.map(preprocess_images, batched=True, features=features)
 
-model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
-# model = ViTForImageClassification2()
+# model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
+model = ViTForImageClassification2()
 
-metric = load_metric("accuracy")
 data_collator = default_data_collator
 
 model.train()
 
-def compute_metrics(eval_pred):
-    predictions, labels = eval_pred
-    predictions = np.argmax(predictions, axis=1)
-    return metric.compute(predictions=predictions, references=labels)
+search_space = {
+    "learning_rate" : [2e-5],
+    "batch_size" : [8],
+    "weight_decay" : [0.01],
+    "epochs" : [10],
+}
 
-args = TrainingArguments(
-    evaluation_strategy = "epoch",
-    save_strategy="epoch",
-    learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
-    num_train_epochs=2,
-    weight_decay=0.01,
-    load_best_model_at_end=False,
-    metric_for_best_model='accuracy',
-    logging_dir= str(path) + '/logs',
-    logging_strategy="epoch",
-    remove_unused_columns=True,
-    output_dir = str(path) + '/results'
-)
+hyperparamters_list = hyperparamters_from_dict(search_space)
+training_args_list = parameters_to_trainingarguments(hyperparamters_list, path = path)
 
-trainer = Trainer(
-    model,
-    args,
-    train_dataset = preprocessed_train_ds,
-    eval_dataset = preprocessed_val_ds,
-    data_collator = data_collator,
-    compute_metrics = compute_metrics,
-)
+for configuration, args in training_args_list:
+    model = ViTForImageClassification2()
+    df = get_results_dataframe_if_exists(str(path) + '/results/grid_search_results_single_run.csv')
+    identifier = shortuuid.uuid()
 
-trainer.train()
+    trainer = Trainer(model,
+        args,
+        train_dataset = preprocessed_train_ds,
+        eval_dataset = preprocessed_val_ds,
+        data_collator = data_collator,
+        compute_metrics = compute_metrics,
+    )
+    trainer.train()
+    summary_results = merge_dicts({"id" : identifier}, configuration ,best_results_from_log(trainer.state.log_history))
+    print(summary_results)
+    all_results = merge_dicts(summary_results, {"all_results" : trainer.state.log_history , "model" : model})
+    df = df.append(summary_results, ignore_index=True)
+    to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
+    df.to_csv(path_or_buf = str(path) + '/results/grid_search_results_single_run.csv')
+    print("Now running on Test set")
+    trainer.evaluate(eval_dataset = preprocessed_test_ds)
 
-trainer.state.log_history
-
-print(trainer.state.log_history)
 # %%

@@ -30,6 +30,7 @@ def available_images(excel_file_path : str, image_folder : str, resize : int):
     errors = 0
     wrong_shape = 0
     missing_data = 0
+    duplicates = 0
     for name, label in zip(names, labels):
         try:
             if os.path.isfile(image_folder + name):
@@ -38,12 +39,53 @@ def available_images(excel_file_path : str, image_folder : str, resize : int):
                 image = np.array(image, dtype=np.uint8)
                 image = np.moveaxis(image, source=-1, destination=0)
                 if image.shape == (3, resize, resize):
-                    new_names.append(image_folder + name)
-                    new_labels.append(label)
+                    new_name = image_folder + name 
+                    if new_name not in new_names:
+                        new_names.append(image_folder + name)
+                        new_labels.append(label)
+                    else:
+                        duplicates += 1
                 else:
                     wrong_shape += 1
             else:
                 missing_data +=1
+        except:
+            errors += 1
+            continue
+    print(f'available images did not work for {errors} files, {duplicates} duplcates in the excelsheet, {wrong_shape} images were the wrong shape, and {missing_data} images were in the excel sheet but not in the image-folder. Total of {len(new_names)} datapoints')
+    return new_names, new_labels
+
+def available_images_cropped(excel_file_path : str, image_folder : str, resize : int):
+    "checks which of the images in de total_shaver_database are actually accesible on device" 
+    data = pd.read_excel(excel_file_path) 
+    new_names, new_labels = [], []
+    names = list(data['product_image'])
+    labels = list(data['predicted_label'])
+    cropped_image_folder_content = os.listdir(image_folder)
+    errors = 0
+    wrong_shape = 0
+    missing_data = 0
+    duplicates = 0
+    for name, label in zip(names, labels):
+        cropped_files = [file for file in cropped_image_folder_content if name.split('.')[0] in file]
+        try:
+            for file in cropped_files:
+                if os.path.isfile(image_folder + file):
+                    image = Image.open(image_folder+file)
+                    image = image.resize((resize,resize), Image.ANTIALIAS)
+                    image = np.array(image, dtype=np.uint8)
+                    image = np.moveaxis(image, source=-1, destination=0)
+                    if image.shape == (3, resize, resize):
+                        new_name = image_folder + file
+                        if new_name not in new_names:
+                            new_names.append(image_folder + file)
+                            new_labels.append(label)
+                        else:
+                            duplicates += 1
+                    else:
+                        wrong_shape += 1
+                else:
+                    missing_data +=1
         except:
             errors += 1
             continue

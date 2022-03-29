@@ -7,7 +7,7 @@ from transformers import default_data_collator
 from pathlib import Path
 from ViT2 import ViTForImageClassification2
 import pandas as pd
-from preprocessing.utils import available_images, split_dataset, preprocess_images, path_to_image
+from preprocessing.utils import available_images, split_dataset, preprocess_images, path_to_image, available_images_cropped
 from training_parameters.utils import hyperparamters_from_dict, compute_metrics, parameters_to_trainingarguments
 from typing import List, Set, Dict, Tuple, Optional
 import shortuuid
@@ -17,10 +17,11 @@ path = Path(__file__).parent
 
 image_folder = str(path) + '/data/image-files/'
 # image_folder = str(path) + '/data/image_folder/'
+image_folder = str(path) + '/data/total_shaver_database_cropped_subimages/'
 excelsheet = str(path) + '/data/total_shaver_database.xlsx'
 
-names_list, labels_list = available_images(excel_file_path = excelsheet, image_folder = image_folder, resize = 600)
-print(f'length names list : {len(names_list)}')
+names_list, labels_list = available_images_cropped(excel_file_path = excelsheet, image_folder = image_folder, resize = 600)
+print(f'length of names_list : {len(names_list)}')
 unique_labels = list(set(labels_list))
 print(unique_labels)
 print(f'amount of labels is {len(unique_labels)}')
@@ -50,8 +51,8 @@ data_collator = default_data_collator
 model.train()
 
 search_space = {
-    "learning_rate" : [2e-5, 5e-5, 7e-5],
-    "batch_size" : [4, 8],
+    "learning_rate" : [2e-5, 2e-6, 2e-7, 2e-8],
+    "batch_size" : [4, 8, 16],
     "weight_decay" : [0.001, 0.01, 0.05, 0.1, 0.8],
     "epochs" : [10],
 }
@@ -60,7 +61,7 @@ search_space = {
 #     "learning_rate" : [2e-5],
 #     "batch_size" : [8],
 #     "weight_decay" : [0.01],
-#     "epochs" : [10],
+#     "epochs" : [1],
 # }
 
 
@@ -69,7 +70,7 @@ training_args_list = parameters_to_trainingarguments(hyperparamters_list, path =
 
 for configuration, args in training_args_list:
     model = ViTForImageClassification2()
-    df = get_results_dataframe_if_exists(str(path) + '/results/grid_search_results_no_duplicates.csv')
+    df = get_results_dataframe_if_exists(str(path) + '/results/grid_search_results_cropped.csv')
     identifier = shortuuid.uuid()
 
     trainer = Trainer(model,
@@ -85,8 +86,7 @@ for configuration, args in training_args_list:
     all_results = merge_dicts(summary_results, {"all_results" : trainer.state.log_history , "model" : model})
     df = df.append(summary_results, ignore_index=True)
     to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
-    df.to_csv(path_or_buf = str(path) + '/results/grid_search_results_no_duplicates.csv')
+    df.to_csv(path_or_buf = str(path) + '/results/grid_search_results_cropped.csv')
     print("Now running on Test set")
     print(trainer.evaluate(eval_dataset = preprocessed_test_ds))
 
-# %%

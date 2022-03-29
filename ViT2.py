@@ -6,7 +6,7 @@ import torch.nn as nn
 from transformers.modeling_outputs import SequenceClassifierOutput
 
 class ViTForImageClassification2(nn.Module):
-    def __init__(self, num_labels=10):
+    def __init__(self, num_labels=9):
 
         super(ViTForImageClassification2, self).__init__()
         self.vit = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k')
