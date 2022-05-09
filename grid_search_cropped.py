@@ -27,10 +27,10 @@ print(unique_labels)
 print(f'amount of labels is {len(unique_labels)}')
 int_labels_list = [unique_labels.index(label) for label in labels_list]
 available_dataset = pd.DataFrame({'img': names_list, 'label': int_labels_list})
-available_dataset.to_csv(str(path) + '/data/available_dataset.csv', index = False)
+available_dataset.to_csv(str(path) + '/data/available_dataset_cropped.csv', index = False)
 
 # %%
-dataset = load_dataset('csv', data_files=str(path) + '/data/available_dataset.csv', delimiter = ',', split = ['train'])[0]
+dataset = load_dataset('csv', data_files=str(path) + '/data/available_dataset_cropped.csv', delimiter = ',', split = ['train'])[0]
 train_val, test = split_dataset(dataset = dataset, ratio = 0.1)
 train, val = split_dataset(dataset = train_val, ratio = 0.2)
 
@@ -51,10 +51,10 @@ data_collator = default_data_collator
 model.train()
 
 search_space = {
-    "learning_rate" : [2e-5, 2e-6, 2e-7, 2e-8],
-    "batch_size" : [4, 8, 16],
-    "weight_decay" : [0.001, 0.01, 0.05, 0.1, 0.8],
-    "epochs" : [10],
+    "learning_rate" : [1e-2, 1e-4, 1e-6, 1e-8],
+    "batch_size" : [2, 4, 8, 16, 32],
+    "weight_decay" : [0.0001, 0.001 ,0.01, 0.1, 1],
+    "epochs" : [15],
 }
 
 # search_space = {
@@ -85,7 +85,7 @@ for configuration, args in training_args_list:
     print(summary_results)
     all_results = merge_dicts(summary_results, {"all_results" : trainer.state.log_history , "model" : model})
     df = df.append(summary_results, ignore_index=True)
-    to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
+#    to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
     df.to_csv(path_or_buf = str(path) + '/results/grid_search_results_cropped.csv')
     print("Now running on Test set")
     print(trainer.evaluate(eval_dataset = preprocessed_test_ds))

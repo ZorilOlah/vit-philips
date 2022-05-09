@@ -49,27 +49,26 @@ data_collator = default_data_collator
 
 model.train()
 
-search_space = {
-    "learning_rate" : [2e-5, 5e-5, 7e-5],
-    "batch_size" : [4, 8],
-    "weight_decay" : [0.001, 0.01, 0.05, 0.1, 0.8],
-    "epochs" : [10],
-}
-
 # search_space = {
-#     "learning_rate" : [2e-5],
-#     "batch_size" : [8],
-#     "weight_decay" : [0.01],
+#     "learning_rate" : [2e-5, 5e-5, 7e-5],
+#     "batch_size" : [4, 8],
+#     "weight_decay" : [0.001, 0.01, 0.05, 0.1, 0.8],
 #     "epochs" : [10],
 # }
 
+search_space = {
+    "learning_rate" : [1e-2, 1e-4, 1e-6, 1e-8],
+    "batch_size" : [2, 4, 8, 16, 32],
+    "weight_decay" : [0.0001, 0.001 ,0.01, 0.1, 1],
+    "epochs" : [15],
+}
 
 hyperparamters_list = hyperparamters_from_dict(search_space)
 training_args_list = parameters_to_trainingarguments(hyperparamters_list, path = path)
 
 for configuration, args in training_args_list:
     model = ViTForImageClassification2()
-    df = get_results_dataframe_if_exists(str(path) + '/results/grid_search_results_no_duplicates.csv')
+    df = get_results_dataframe_if_exists(str(path) + '/results/grid_search_results_no_duplicates_broad_search.csv')
     identifier = shortuuid.uuid()
 
     trainer = Trainer(model,
@@ -84,9 +83,9 @@ for configuration, args in training_args_list:
     print(summary_results)
     all_results = merge_dicts(summary_results, {"all_results" : trainer.state.log_history , "model" : model})
     df = df.append(summary_results, ignore_index=True)
-    to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
-    df.to_csv(path_or_buf = str(path) + '/results/grid_search_results_no_duplicates.csv')
+    # to_pickle(file = all_results, name_location = str(path) + '/results/' + identifier + '.pkl')
+    df.to_csv(path_or_buf = str(path) + '/results/grid_search_results_no_duplicates_broad_search.csv')
     print("Now running on Test set")
-    print(trainer.evaluate(eval_dataset = preprocessed_test_ds))
+    # print(trainer.evaluate(eval_dataset = preprocessed_test_ds))
 
 # %%
